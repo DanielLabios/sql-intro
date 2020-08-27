@@ -11,8 +11,7 @@ CREATE TABLE "Employees" (
   "Salary"            DECIMAL(10,2),
   "JobPosition"       VARCHAR(100),
   "PhoneExtension"    VarChar(10),
-  "IsPartTime"        BOOLEAN
-  "ID"                SERIAL PRIMARY KEY       
+  "IsPartTime"        BOOLEAN       
 );
 
 -- Dummy Data. One entry is a cook. One entry is name Lazy Larry
@@ -41,6 +40,9 @@ VALUES ('Luke Safly', '75000', 'Cook', '7100','False' );
 -- Show full name and phone extension for only part time workers
 
 SELECT * FROM "Employees";
+
+-- Select All Columns for all Employees
+
 SELECT "FullName", "PhoneExtension" FROM "Employees" WHERE "IsPartTime" = 'False';
 
 -- Add new part time software developer with salary 450
@@ -63,3 +65,106 @@ WHERE "FullName" = 'Lazy Larry';
 
 ALTER TABLE "Employees"
 ADD COLUMN "ParkingSpot" VarChar(10);
+
+-- Create new table Departments
+
+CREATE TABLE "Departments" (
+  "Id"         SERIAL PRIMARY KEY NOT NULL,
+  "DepartmentName"    text,
+  "Building"          text    
+);
+
+-- Add department Id to Employees table
+
+ALTER TABLE "Employees"
+ADD COLUMN "DepartmentId" INTEGER NULL REFERENCES "Departments" ("Id");
+
+-- Create new table Products
+
+CREATE TABLE "Products" (
+  "Id"         SERIAL PRIMARY KEY NOT NULL,
+  "Price"             DECIMAL(10,2),
+  "Name"              VARCHAR(100),
+  "Description"       VARCHAR(500),
+  "QuantityInStock"   INTEGER        
+);
+
+-- Create new Table Orders
+
+CREATE TABLE "Orders" (
+  "Id"         SERIAL PRIMARY KEY NOT NULL,
+  "OrderNumber"       VARCHAR(50),
+  "DatePlaced"        TIMESTAMP,
+  "Email"             VARCHAR(100)
+);
+
+-- ProductOrders Handles Many to Many Relationship
+
+CREATE TABLE "ProductOrders" (
+  "Id"         SERIAL PRIMARY KEY NOT NULL,
+  "ProductId"         INTEGER REFERENCES "Products" ("Id"),
+  "OrderId"           INTEGER REFERENCES "Orders" ("Id"),
+  "OrderQuantity"     INTEGER
+);
+
+-- Inserting Departments Entries
+
+INSERT INTO "Departments"("DepartmentName", "Building")
+VALUES ('Development', 'Main' );
+INSERT INTO "Departments"("DepartmentName", "Building")
+VALUES ('Marketing', 'North' );
+
+-- Insert More Employees
+
+INSERT INTO "Employees"("FullName", "Salary", "JobPosition", "PhoneExtension", "IsPartTime", "DepartmentId")
+VALUES ('Tim Smith', '40000', 'Programmer', '123','False', '1' );
+INSERT INTO "Employees"("FullName", "Salary", "JobPosition", "PhoneExtension", "IsPartTime", "DepartmentId")
+VALUES ('Barbara Ramsey', '80000', 'Manager', '234','False', '1' );
+INSERT INTO "Employees"("FullName", "Salary", "JobPosition", "PhoneExtension", "IsPartTime", "DepartmentId")
+VALUES ('Tom Jones', '32000', 'Admin', '456','True', '2' );
+
+--Insert Products
+
+INSERT INTO "Products"("Price", "Name", "Description", "QuantityInStock")
+VALUES ('12.45', 'Widget', 'The Original Widget', '100' );
+INSERT INTO "Products"("Price", "Name", "Description", "QuantityInStock")
+VALUES ('99.99', 'Flowbee', 'Perfect for haircuts', '3' );
+
+-- Insert Order x529
+
+INSERT INTO "Orders"("OrderNumber", "DatePlaced", "Email")
+VALUES ('X529', '2020-01-01 16:55:00', 'person@example.com');
+
+-- Adding Orders for x529
+
+INSERT INTO "ProductOrders"("ProductId", "OrderId", "OrderQuantity")
+VALUES ('1','1','3');
+INSERT INTO "ProductOrders"("ProductId", "OrderId", "OrderQuantity")
+VALUES ('2','1','2');
+
+--  Given a department id, return all employees in the department.
+
+SELECT * FROM "Employees" WHERE "DepartmentId" = '1';
+
+-- Given department name, return all the phone extensions
+
+SELECT "Employees"."FullName", "Employees"."PhoneExtension", "Departments"."DepartmentName"
+FROM "Employees"
+JOIN "Departments" ON "Departments"."Id" = "Employees"."DepartmentId"
+WHERE "Departments"."DepartmentName" = 'Development';
+
+-- Find all orders that contain product id 2
+
+SELECT "Orders".*, "Products"."Id", "Products"."Name"
+FROM "Orders"
+JOIN "ProductOrders" ON "Orders"."Id" = "ProductOrders"."OrderId"
+JOIN "Products" ON "Products"."Id" = "ProductOrders"."ProductId"
+WHERE "Products"."Id" = '2';
+
+
+
+-- Delete Flowbee from Product order x529
+
+DELETE
+FROM "ProductOrders"
+WHERE "ProductId" = '2';
